@@ -14,7 +14,8 @@ app.post('/obfuscate', async (req, res) => {
   if (!sourceRepo || !destRepo || !token || !gitUser || !gitEmail) 
     return res.send('All fields are required.');
 
-  const tmpDir = path.join(__dirname, 'tmp_repo');
+  // const tmpDir = path.join(__dirname, 'tmp_repo');
+  const tmpDir = '/tmp/tmp_repo';
   if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
 
   const sourceUrl = sourceRepo.replace('https://', `https://${token}@`);
