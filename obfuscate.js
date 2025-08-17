@@ -15,12 +15,11 @@ function obfuscateDirectory(dirPath) {
       obfuscateDirectory(fullPath);
     } else if (
       fullPath.endsWith('.js') && 
-      !excludeFiles.includes(path.basename(fullPath))  // Fixed: Added missing parenthesis
-    ) {  // This closing parenthesis was missing
+      !excludeFiles.includes(path.basename(fullPath))
+    ) {
       try {
         let code = fs.readFileSync(fullPath, 'utf8');
         
-        // Add MR FRANK comment if not already present
         if (!code.includes('// MR FRANK')) {
           code = `// MR FRANK\n${code}`;
         }
@@ -28,7 +27,7 @@ function obfuscateDirectory(dirPath) {
         const isHeavyObfuscation = fullPath.includes('data') || 
                                   fullPath.includes(path.join('plugins', 'lib'));
 
-        const obfuscationOptions = {
+        const obfuscatedCode = JavaScriptObfuscator.obfuscate(code, {
           compact: true,
           controlFlowFlattening: isHeavyObfuscation,
           controlFlowFlatteningThreshold: isHeavyObfuscation ? 0.75 : 0.5,
@@ -44,13 +43,11 @@ function obfuscateDirectory(dirPath) {
           transformObjectKeys: false,
           renameGlobals: true,
           unicodeEscapeSequence: true
-        };
+        }).getObfuscatedCode();
 
-        const obfuscatedCode = JavaScriptObfuscator.obfuscate(code, obfuscationOptions)
-          .getObfuscatedCode();
-        
         fs.writeFileSync(fullPath, obfuscatedCode, 'utf8');
         console.log(`Obfuscated: ${path.relative(dirPath, fullPath)}`);
+
       } catch (err) {
         console.error(`Error processing ${fullPath}:`, err.message);
       }
