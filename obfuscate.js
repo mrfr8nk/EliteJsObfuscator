@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 
-const excludeFiles = ['settings.js', 'config.js'];
+const excludeFiles = ['settings.js', 'config.js', '.env'];
 
 function obfuscateDirectory(dirPath) {
   const files = fs.readdirSync(dirPath);
@@ -13,27 +13,47 @@ function obfuscateDirectory(dirPath) {
 
     if (stat.isDirectory()) {
       obfuscateDirectory(fullPath);
-    } else if (fullPath.endsWith('.js') && !excludeFiles.includes(path.basename(fullPath))) {
+    } else if (
+      fullPath.endsWith('.js') && 
+      !excludeFiles.includes(path.basename(fullPath)) {
+      
+      let code = fs.readFileSync(fullPath, 'utf8');
+      
+      // Add MR FRANK comment if not already present
+      if (!code.includes('// MR FRANK')) {
+        code = `// MR FRANK\n${code}`;
+      }
 
-      const code = fs.readFileSync(fullPath, 'utf8');
+      const isHeavyObfuscation = fullPath.includes('data') || 
+                                fullPath.includes(path.join('plugins', 'lib'));
 
-      // Heavy obfuscation for data and plugins/lib
-      const heavy = fullPath.includes('data') || fullPath.includes(path.join('plugins','lib'));
-
-      const obfuscatedCode = JavaScriptObfuscator.obfuscate(code, {
+      const obfuscationOptions = {
         compact: true,
-        controlFlowFlattening: heavy,
-        controlFlowFlatteningThreshold: 0.75,
-        deadCodeInjection: heavy,
-        deadCodeInjectionThreshold: 0.4,
+        controlFlowFlattening: isHeavyObfuscation,
+        controlFlowFlatteningThreshold: isHeavyObfuscation ? 0.75 : 0.5,
+        deadCodeInjection: isHeavyObfuscation,
+        deadCodeInjectionThreshold: isHeavyObfuscation ? 0.4 : 0.2,
+        stringArray: true,
         stringArrayEncoding: ['base64'],
         stringArrayThreshold: 0.75,
-        selfDefending: heavy,
-        disableConsoleOutput: true
-      }).getObfuscatedCode();
+        selfDefending: true,
+        disableConsoleOutput: true,
+        identifierNamesGenerator: 'hexadecimal',
+        reservedNames: ['MR FRANK'],
+        transformObjectKeys: false,
+        renameGlobals: true,
+        unicodeEscapeSequence: true
+      };
 
-      fs.writeFileSync(fullPath, obfuscatedCode, 'utf8');
-      console.log(`Obfuscated: ${fullPath}`);
+      try {
+        const obfuscatedCode = JavaScriptObfuscator.obfuscate(code, obfuscationOptions)
+          .getObfuscatedCode();
+        
+        fs.writeFileSync(fullPath, obfuscatedCode, 'utf8');
+        console.log(`Obfuscated: ${path.relative(dirPath, fullPath)}`);
+      } catch (err) {
+        console.error(`Error obfuscating ${fullPath}:`, err.message);
+      }
     }
   });
 }
