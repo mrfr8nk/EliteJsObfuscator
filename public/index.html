@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS Repo Obfuscator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+body{background:linear-gradient(135deg,#1f1f1f,#2a2a2a);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
+.container{background-color:#161616;padding:30px 40px;border-radius:12px;box-shadow:0 0 20px rgba(0,0,0,0.7);max-width:500px;width:100%;text-align:center;}
+h1{margin-bottom:20px;font-size:1.8rem;color:#00f0ff;text-shadow:1px 1px 4px #0ff;}
+label{display:block;text-align:left;margin-bottom:5px;font-weight:500;color:#ccc;}
+input[type="text"], input[type="password"], input[type="email"]{width:100%;padding:10px 12px;margin-bottom:20px;border-radius:6px;border:1px solid #333;background-color:#1f1f1f;color:#fff;font-size:1rem;}
+input::placeholder{color:#777;}
+button{background-color:#00f0ff;color:#161616;border:none;padding:12px 20px;border-radius:8px;font-size:1rem;cursor:pointer;transition:all 0.3s ease;width:100%;}
+button:hover{background-color:#00c9d9;transform:translateY(-2px);}
+.footer{margin-top:20px;font-size:0.9rem;color:#555;}
+@media(max-width:500px){.container{padding:20px;}h1{font-size:1.5rem;}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>JS Repo Obfuscator</h1>
+<form action="/obfuscate" method="POST">
+<label>Source GitHub Repo URL:</label>
+<input type="text" name="sourceRepo" placeholder="https://github.com/user/source" required>
+
+<label>Destination GitHub Repo URL:</label>
+<input type="text" name="destRepo" placeholder="https://github.com/user/dest" required>
+
+<label>GitHub Personal Access Token:</label>
+<input type="password" name="token" placeholder="ghp_xxxxxxx" required>
+
+<label>Git Commit Username:</label>
+<input type="text" name="gitUser" placeholder="Your Git username" required>
+
+<label>Git Commit Email:</label>
+<input type="email" name="gitEmail" placeholder="you@example.com" required>
+
+<button type="submit">Obfuscate & Push</button>
+</form>
+<div class="footer">&copy; 2025 Mr Frank | Powered by JS Obfuscator</div>
+</div>
+</body>
+</html>
