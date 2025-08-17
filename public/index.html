@@ -6,152 +6,126 @@
   <title>MR FRANK Obfuscator</title>
   <style>
     :root {
-      --navy-blue: #0a192f;
+      --navy: #0a192f;
       --light-navy: #172a45;
-      --lightest-navy: #303C55;
       --slate: #8892b0;
       --light-slate: #a8b2d1;
-      --lightest-slate: #ccd6f6;
       --white: #e6f1ff;
       --accent: #64ffda;
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
+    
     body {
-      background: linear-gradient(135deg, var(--navy-blue) 0%, var(--light-navy) 100%);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
+      background: var(--navy);
       color: var(--white);
+      font-family: 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      padding: 20px;
     }
-
-    .glass-card {
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
       background: rgba(10, 25, 47, 0.7);
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 15px;
+      border-radius: 10px;
+      padding: 30px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(100, 255, 218, 0.2);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-      padding: 2rem;
-      width: 100%;
-      max-width: 600px;
-      transition: all 0.3s ease;
     }
-
-    .glass-card:hover {
-      box-shadow: 0 8px 32px 0 rgba(100, 255, 218, 0.1);
-      border: 1px solid rgba(100, 255, 218, 0.3);
-    }
-
+    
     h1 {
-      text-align: center;
-      margin-bottom: 1.5rem;
       color: var(--accent);
-      font-weight: 600;
+      text-align: center;
+      margin-bottom: 20px;
     }
-
+    
     .form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 20px;
     }
-
+    
     label {
       display: block;
-      margin-bottom: 0.5rem;
+      margin-bottom: 8px;
       color: var(--light-slate);
-      font-size: 0.9rem;
     }
-
-    input, textarea {
+    
+    input {
       width: 100%;
-      padding: 0.8rem 1rem;
+      padding: 12px;
       background: rgba(23, 42, 69, 0.5);
-      border: 1px solid rgba(100, 255, 218, 0.1);
-      border-radius: 8px;
+      border: 1px solid var(--light-navy);
+      border-radius: 5px;
       color: var(--white);
-      font-size: 1rem;
-      transition: all 0.3s ease;
+      font-size: 16px;
     }
-
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(100, 255, 218, 0.2);
-    }
-
+    
     button {
       width: 100%;
-      padding: 1rem;
+      padding: 14px;
       background: rgba(100, 255, 218, 0.1);
-      border: 1px solid var(--accent);
-      border-radius: 8px;
       color: var(--accent);
-      font-size: 1rem;
+      border: 1px solid var(--accent);
+      border-radius: 5px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
+    
     button:hover {
       background: rgba(100, 255, 218, 0.2);
-      transform: translateY(-2px);
     }
-
+    
     #result {
-      margin-top: 1.5rem;
-      padding: 1rem;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 5px;
       display: none;
     }
-
-    .logo {
-      text-align: center;
-      margin-bottom: 1rem;
-      font-size: 1.5rem;
-      font-weight: 700;
+    
+    .error {
+      background: rgba(255, 100, 100, 0.1);
+      border: 1px solid #ff6b6b;
+      color: #ff6b6b;
+    }
+    
+    .success {
+      background: rgba(100, 255, 218, 0.1);
+      border: 1px solid var(--accent);
       color: var(--accent);
     }
-
-    .security-note {
-      font-size: 0.8rem;
+    
+    .note {
+      font-size: 14px;
       color: var(--slate);
-      margin-top: 1rem;
+      margin-top: 20px;
       text-align: center;
     }
   </style>
 </head>
 <body>
-  <div class="glass-card">
-    <div class="logo">// MR FRANK</div>
+  <div class="container">
     <h1>GitHub Obfuscator</h1>
     
     <form id="obfuscateForm">
       <div class="form-group">
         <label for="sourceRepo">Source Repository URL</label>
-        <input type="text" id="sourceRepo" name="sourceRepo" placeholder="https://github.com/user/repo" required>
+        <input type="text" id="sourceRepo" name="sourceRepo" placeholder="https://github.com/username/repo" required>
       </div>
       
       <div class="form-group">
         <label for="destRepo">Destination Repository URL</label>
-        <input type="text" id="destRepo" name="destRepo" placeholder="https://github.com/user/repo" required>
+        <input type="text" id="destRepo" name="destRepo" placeholder="https://github.com/username/repo" required>
       </div>
       
       <div class="form-group">
-        <label for="token">GitHub Token (optional if using .env)</label>
-        <input type="password" id="token" name="token" placeholder="ghp_yourTokenHere">
+        <label for="token">GitHub Token</label>
+        <input type="password" id="token" name="token" placeholder="ghp_yourTokenHere" required>
       </div>
       
       <div class="form-group">
         <label for="gitUser">Git Username</label>
-        <input type="text" id="gitUser" name="gitUser" placeholder="Your Git Username" required>
+        <input type="text" id="gitUser" name="gitUser" placeholder="YourUsername" required>
       </div>
       
       <div class="form-group">
@@ -164,7 +138,7 @@
     
     <div id="result"></div>
     
-    <p class="security-note">
+    <p class="note">
       Note: Tokens are never stored. For security, we recommend using environment variables.
     </p>
   </div>
@@ -172,8 +146,8 @@
   <script>
     document.getElementById('obfuscateForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const formData = new FormData(e.target);
-      const button = e.target.querySelector('button');
+      const form = e.target;
+      const button = form.querySelector('button');
       const resultDiv = document.getElementById('result');
       
       button.disabled = true;
@@ -183,21 +157,29 @@
       try {
         const response = await fetch('/obfuscate', {
           method: 'POST',
-          body: new URLSearchParams(formData)
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: new URLSearchParams(new FormData(form))
         });
         
         const data = await response.json();
-        resultDiv.textContent = data.success ? data.message : data.error;
-        resultDiv.style.display = 'block';
-        resultDiv.style.color = data.success ? '#64ffda' : '#ff6b6b';
         
-        if (data.success) {
-          e.target.reset();
+        if (!response.ok) {
+          throw new Error(data.error || data.message || 'Unknown error');
         }
-      } catch (err) {
-        resultDiv.textContent = 'Network error: ' + err.message;
+        
+        resultDiv.textContent = data.message || 'Success!';
+        resultDiv.className = 'success';
         resultDiv.style.display = 'block';
-        resultDiv.style.color = '#ff6b6b';
+        form.reset();
+        
+      } catch (err) {
+        resultDiv.textContent = err.message;
+        resultDiv.className = 'error';
+        resultDiv.style.display = 'block';
+        console.error('Error:', err);
       } finally {
         button.disabled = false;
         button.textContent = 'Obfuscate & Push';
