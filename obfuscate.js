@@ -15,8 +15,8 @@ function obfuscateDirectory(dirPath) {
       obfuscateDirectory(fullPath);
     } else if (
       fullPath.endsWith('.js') && 
-      !excludeFiles.includes(path.basename(fullPath))
-    {
+      !excludeFiles.includes(path.basename(fullPath))  // Fixed: Added missing parenthesis
+    ) {  // This closing parenthesis was missing
       try {
         let code = fs.readFileSync(fullPath, 'utf8');
         
