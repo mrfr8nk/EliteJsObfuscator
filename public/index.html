@@ -1,190 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MR FRANK Obfuscator</title>
-  <style>
-    :root {
-      --navy: #0a192f;
-      --light-navy: #172a45;
-      --slate: #8892b0;
-      --light-slate: #a8b2d1;
-      --white: #e6f1ff;
-      --accent: #64ffda;
-    }
-    
-    body {
-      background: var(--navy);
-      color: var(--white);
-      font-family: 'Segoe UI', sans-serif;
-      line-height: 1.6;
-      padding: 20px;
-    }
-    
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: rgba(10, 25, 47, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 10px;
-      padding: 30px;
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-      border: 1px solid rgba(100, 255, 218, 0.2);
-    }
-    
-    h1 {
-      color: var(--accent);
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: var(--light-slate);
-    }
-    
-    input {
-      width: 100%;
-      padding: 12px;
-      background: rgba(23, 42, 69, 0.5);
-      border: 1px solid var(--light-navy);
-      border-radius: 5px;
-      color: var(--white);
-      font-size: 16px;
-    }
-    
-    button {
-      width: 100%;
-      padding: 14px;
-      background: rgba(100, 255, 218, 0.1);
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 5px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    
-    button:hover {
-      background: rgba(100, 255, 218, 0.2);
-    }
-    
-    #result {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 5px;
-      display: none;
-    }
-    
-    .error {
-      background: rgba(255, 100, 100, 0.1);
-      border: 1px solid #ff6b6b;
-      color: #ff6b6b;
-    }
-    
-    .success {
-      background: rgba(100, 255, 218, 0.1);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-    }
-    
-    .note {
-      font-size: 14px;
-      color: var(--slate);
-      margin-top: 20px;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JS Repo Obfuscator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
+body{background:linear-gradient(135deg,#1f1f1f,#2a2a2a);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
+.container{background-color:#161616;padding:30px 40px;border-radius:12px;box-shadow:0 0 20px rgba(0,0,0,0.7);max-width:500px;width:100%;text-align:center;}
+h1{margin-bottom:20px;font-size:1.8rem;color:#00f0ff;text-shadow:1px 1px 4px #0ff;}
+label{display:block;text-align:left;margin-bottom:5px;font-weight:500;color:#ccc;}
+input[type="text"], input[type="password"], input[type="email"]{width:100%;padding:10px 12px;margin-bottom:20px;border-radius:6px;border:1px solid #333;background-color:#1f1f1f;color:#fff;font-size:1rem;}
+input::placeholder{color:#777;}
+button{background-color:#00f0ff;color:#161616;border:none;padding:12px 20px;border-radius:8px;font-size:1rem;cursor:pointer;transition:all 0.3s ease;width:100%;}
+button:hover{background-color:#00c9d9;transform:translateY(-2px);}
+.footer{margin-top:20px;font-size:0.9rem;color:#555;}
+@media(max-width:500px){.container{padding:20px;}h1{font-size:1.5rem;}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>GitHub Obfuscator</h1>
-    
-    <form id="obfuscateForm">
-      <div class="form-group">
-        <label for="sourceRepo">Source Repository URL</label>
-        <input type="text" id="sourceRepo" name="sourceRepo" placeholder="https://github.com/username/repo" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="destRepo">Destination Repository URL</label>
-        <input type="text" id="destRepo" name="destRepo" placeholder="https://github.com/username/repo" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="token">GitHub Token</label>
-        <input type="password" id="token" name="token" placeholder="ghp_yourTokenHere" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="gitUser">Git Username</label>
-        <input type="text" id="gitUser" name="gitUser" placeholder="YourUsername" required>
-      </div>
-      
-      <div class="form-group">
-        <label for="gitEmail">Git Email</label>
-        <input type="email" id="gitEmail" name="gitEmail" placeholder="your.email@example.com" required>
-      </div>
-      
-      <button type="submit">Obfuscate & Push</button>
-    </form>
-    
-    <div id="result"></div>
-    
-    <p class="note">
-      Note: Tokens are never stored. For security, we recommend using environment variables.
-    </p>
-  </div>
+<div class="container">
+<h1>JS Repo Obfuscator</h1>
+<form action="/obfuscate" method="POST">
+<label>Source GitHub Repo URL:</label>
+<input type="text" name="sourceRepo" placeholder="https://github.com/user/source" required>
 
-  <script>
-    document.getElementById('obfuscateForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const button = form.querySelector('button');
-      const resultDiv = document.getElementById('result');
-      
-      button.disabled = true;
-      button.textContent = 'Processing...';
-      resultDiv.style.display = 'none';
-      
-      try {
-        const response = await fetch('/obfuscate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-          },
-          body: new URLSearchParams(new FormData(form))
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Unknown error');
-        }
-        
-        resultDiv.textContent = data.message || 'Success!';
-        resultDiv.className = 'success';
-        resultDiv.style.display = 'block';
-        form.reset();
-        
-      } catch (err) {
-        resultDiv.textContent = err.message;
-        resultDiv.className = 'error';
-        resultDiv.style.display = 'block';
-        console.error('Error:', err);
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Obfuscate & Push';
-      }
-    });
-  </script>
+<label>Destination GitHub Repo URL:</label>
+<input type="text" name="destRepo" placeholder="https://github.com/user/dest" required>
+
+<label>GitHub Personal Access Token:</label>
+<input type="password" name="token" placeholder="ghp_xxxxxxx" required>
+
+<label>Git Commit Username:</label>
+<input type="text" name="gitUser" placeholder="Your Git username" required>
+
+<label>Git Commit Email:</label>
+<input type="email" name="gitEmail" placeholder="you@example.com" required>
+
+<button type="submit">Obfuscate & Push</button>
+</form>
+<div class="footer">&copy; 2025 Mr Frank | Powered by JS Obfuscator</div>
+</div>
 </body>
 </html>
