@@ -4,6 +4,7 @@ const simpleGit = require('simple-git');
 const fs = require('fs');
 const path = require('path');
 const obfuscateDirectory = require('./obfuscate');
+require('dotenv').config();
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -11,28 +12,31 @@ app.use(express.static('public'));
 
 app.post('/obfuscate', async (req, res) => {
   const { sourceRepo, destRepo, token, gitUser, gitEmail } = req.body;
-  if (!sourceRepo || !destRepo || !token || !gitUser || !gitEmail) 
-    return res.send('All fields are required.');
+  if (!sourceRepo || !destRepo || !gitUser || !gitEmail) {
+    return res.status(400).json({ error: 'All fields except token are required' });
+  }
+
+  // Use environment variable if available, otherwise use provided token
+  const authToken = process.env.GIT_TOKEN || token;
+  if (!authToken) {
+    return res.status(400).json({ error: 'No GitHub token provided' });
+  }
 
   const tmpDir = path.join(__dirname, 'tmp_repo');
   if (fs.existsSync(tmpDir)) fs.rmSync(tmpDir, { recursive: true, force: true });
 
-  const sourceUrl = sourceRepo.replace('https://', `https://${token}@`);
-  const destUrl = destRepo.replace('https://', `https://${token}@`);
-
-  const git = simpleGit();
-
   try {
+    const git = simpleGit();
+    const sourceUrl = `https://${authToken}@${sourceRepo.replace('https://', '').replace('github.com/', '')}`;
+    const destUrl = `https://${authToken}@${destRepo.replace('https://', '').replace('github.com/', '')}`;
+
     console.log('Cloning source repo...');
     await git.clone(sourceUrl, tmpDir);
 
     console.log('Starting obfuscation...');
     obfuscateDirectory(tmpDir);
-    console.log('Obfuscation complete!');
 
     const destGit = simpleGit(tmpDir);
-
-    // Use Git identity from form fields
     await destGit.addConfig('user.name', gitUser);
     await destGit.addConfig('user.email', gitEmail);
 
@@ -40,19 +44,18 @@ app.post('/obfuscate', async (req, res) => {
     await destGit.add('.');
 
     console.log('Committing changes...');
-    await destGit.commit('Obfuscated JS files');
+    await destGit.commit('Obfuscated JS files - // MR FRANK');
 
     console.log('Pushing to destination repo...');
     await destGit.push(destUrl, 'main');
 
-    // Cleanup
     fs.rmSync(tmpDir, { recursive: true, force: true });
-
-    console.log('All done! Obfuscated files pushed to destination repo.');
-    res.send('Obfuscation complete and pushed to destination repo!');
+    console.log('Success!');
+    res.json({ success: true, message: 'Obfuscation complete and pushed to destination repo!' });
   } catch (err) {
-    console.error(err);
-    res.send('Error: ' + err.message);
+    console.error('Error:', err);
+    fs.rmSync(tmpDir, { recursive: true, force: true }).catch(() => {});
+    res.status(500).json({ error: err.message });
   }
 });
 
