@@ -42,9 +42,13 @@ app.post('/obfuscate', async (req, res) => {
     console.log('Committing changes...');
     await destGit.commit('Obfuscated JS files');
 
-    console.log('Pushing to destination repo...');
+    /*console.log('Pushing to destination repo...');
     await destGit.push(destUrl, 'main');
+*/
 
+    sendProgress('Pushing to destination repo (force overwrite)...');
+await destGit.push(destUrl, 'main', ['--force']);
+    
     // Cleanup
     fs.rmSync(tmpDir, { recursive: true, force: true });
 
