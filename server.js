@@ -9,10 +9,29 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// --- Helper to log & (later) send progress ---
-function sendProgress(message) {
+// SSE clients storage
+let sseClients = [];
+
+// SSE endpoint for progress updates
+app.get('/progress', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  
+  sseClients.push(res);
+  
+  req.on('close', () => {
+    sseClients = sseClients.filter(client => client !== res);
+  });
+});
+
+// --- Helper to log & send progress ---
+function sendProgress(message, status = 'active') {
   console.log(`[PROGRESS] ${message}`);
-  // Later you can also push updates to frontend via SSE/WebSocket here
+  
+  sseClients.forEach(client => {
+    client.write(`data: ${JSON.stringify({ message, status })}\n\n`);
+  });
 }
 
 app.post('/obfuscate', async (req, res) => {
@@ -61,10 +80,11 @@ app.post('/obfuscate', async (req, res) => {
     // Cleanup
     fs.rmSync(tmpDir, { recursive: true, force: true });
 
-    sendProgress('✅ Done! Obfuscated files pushed to destination repo.');
+    sendProgress('✅ Done! Obfuscated files pushed to destination repo.', 'complete');
     res.send('Obfuscation complete and pushed to destination repo!');
   } catch (err) {
     console.error(err);
+    sendProgress('❌ Error: ' + err.message, 'error');
     res.send('Error: ' + err.message);
   }
 });

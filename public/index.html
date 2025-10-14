@@ -126,7 +126,82 @@
   .btn-primary:active{transform:translateY(0); filter:brightness(.98)}
   .btn-primary:focus-visible{outline:none; box-shadow:0 0 0 4px rgba(14,165,233,0.35), 0 14px 34px rgba(124,58,237,0.55)}
 
-  .footer{margin-top:18px; color:var(--text-secondary); font-size:.95rem; text-align:center}
+  .footer{
+    margin-top:24px; 
+    padding:20px 0 8px; 
+    color:var(--text-secondary); 
+    font-size:.95rem; 
+    text-align:center;
+    border-top:1px solid rgba(255,255,255,0.1);
+    position:relative;
+  }
+  .footer::before{
+    content:"";
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:1px;
+    background:linear-gradient(90deg, transparent, var(--primary), transparent);
+  }
+  .footer-brand{
+    font-weight:700; 
+    background:linear-gradient(90deg,var(--primary),var(--accent));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    display:inline-block;
+    animation: glow 3s ease-in-out infinite;
+  }
+  @keyframes glow{
+    0%, 100%{opacity:1}
+    50%{opacity:0.7}
+  }
+  .footer-tech{
+    margin-top:6px; font-size:0.8rem; opacity:0.6;
+  }
+
+  .progress-container{
+    display:none;
+    margin-top:20px;
+    padding:20px;
+    border-radius:12px;
+    background:rgba(124,58,237,0.1);
+    border:1px solid rgba(124,58,237,0.25);
+  }
+  .progress-container.active{display:block}
+  .progress-title{
+    font-weight:600; margin-bottom:12px;
+    color:var(--primary);
+  }
+  .progress-steps{
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .progress-step{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.04);
+    color:var(--text-secondary);
+    transition:all 0.3s ease;
+  }
+  .progress-step.active{
+    background:rgba(124,58,237,0.2);
+    color:var(--text-primary);
+    border-left:3px solid var(--primary);
+  }
+  .progress-step.complete{
+    color:rgba(16,185,129,0.9);
+  }
+  .step-icon{
+    width:20px; height:20px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .spinner{
+    width:16px; height:16px;
+    border:2px solid var(--primary);
+    border-top-color:transparent;
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{
+    to{transform:rotate(360deg)}
+  }
 
   @media(max-width:560px){
     .container{padding:22px 18px; border-radius:16px}
@@ -138,6 +213,7 @@
 
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important}
+    .spinner, .glow{animation:none !important}
   }
 </style>
 </head>
@@ -174,9 +250,106 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-primary">Obfuscate & Push</button>
+      <button type="submit" class="btn-primary" id="submitBtn">Obfuscate & Push</button>
     </form>
-    <div class="footer">&copy; 2025 Mr Frank · Powered by JS Obfuscator</div>
+
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-title">🚀 Obfuscation Progress</div>
+      <div class="progress-steps" id="progressSteps"></div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-brand">Mr Frank</div>
+      <div class="footer-tech">⚡ Powered by JavaScript Obfuscator · Secured with ❤️</div>
+    </div>
   </div>
+
+  <script>
+    const form = document.querySelector('form');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressSteps = document.getElementById('progressSteps');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processing...';
+      progressContainer.classList.add('active');
+      progressSteps.innerHTML = '';
+
+      // Setup SSE for progress updates
+      const eventSource = new EventSource('/progress');
+      
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        addProgressStep(data.message, data.status);
+        
+        if (data.status === 'complete' || data.status === 'error') {
+          eventSource.close();
+          submitBtn.disabled = false;
+          submitBtn.textContent = data.status === 'complete' ? '✅ Done!' : '❌ Error';
+          setTimeout(() => {
+            submitBtn.textContent = 'Obfuscate & Push';
+            if (data.status === 'complete') {
+              progressContainer.classList.remove('active');
+            }
+          }, 3000);
+        }
+      };
+
+      // Submit the form
+      try {
+        await fetch('/obfuscate', {
+          method: 'POST',
+          body: new URLSearchParams(formData)
+        });
+      } catch (err) {
+        console.error(err);
+        addProgressStep('Error: ' + err.message, 'error');
+        eventSource.close();
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Obfuscate & Push';
+      }
+    });
+
+    function addProgressStep(message, status = 'active') {
+      const step = document.createElement('div');
+      step.className = 'progress-step';
+      
+      if (status === 'complete') step.classList.add('complete');
+      if (status === 'active') step.classList.add('active');
+      
+      const icon = document.createElement('div');
+      icon.className = 'step-icon';
+      
+      if (status === 'active') {
+        icon.innerHTML = '<div class="spinner"></div>';
+      } else if (status === 'complete') {
+        icon.textContent = '✓';
+      } else if (status === 'error') {
+        icon.textContent = '✗';
+        step.style.color = 'rgba(239,68,68,0.9)';
+      }
+      
+      const text = document.createElement('span');
+      text.textContent = message;
+      
+      step.appendChild(icon);
+      step.appendChild(text);
+      progressSteps.appendChild(step);
+      
+      // Mark previous steps as complete
+      const allSteps = progressSteps.querySelectorAll('.progress-step');
+      allSteps.forEach((s, i) => {
+        if (i < allSteps.length - 1) {
+          s.classList.remove('active');
+          s.classList.add('complete');
+          s.querySelector('.step-icon').innerHTML = '✓';
+        }
+      });
+    }
+  </script>
 </body>
 </html>
