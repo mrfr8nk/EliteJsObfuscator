@@ -9,29 +9,27 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// SSE clients storage
-let sseClients = [];
+// In-memory progress storage (works for single instance or low traffic)
+let progressData = {
+  sessionId: null,
+  steps: []
+};
 
-// SSE endpoint for progress updates
-app.get('/progress', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
+// Progress polling endpoint (Vercel compatible)
+app.get('/progress/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
   
-  sseClients.push(res);
-  
-  req.on('close', () => {
-    sseClients = sseClients.filter(client => client !== res);
-  });
+  if (progressData.sessionId === sessionId) {
+    res.json({ steps: progressData.steps });
+  } else {
+    res.json({ steps: [] });
+  }
 });
 
 // --- Helper to log & send progress ---
 function sendProgress(message, status = 'active') {
   console.log(`[PROGRESS] ${message}`);
-  
-  sseClients.forEach(client => {
-    client.write(`data: ${JSON.stringify({ message, status })}\n\n`);
-  });
+  progressData.steps.push({ message, status, timestamp: Date.now() });
 }
 
 app.post('/obfuscate', async (req, res) => {
@@ -39,6 +37,10 @@ app.post('/obfuscate', async (req, res) => {
   if (!sourceRepo || !destRepo || !token || !gitUser || !gitEmail) {
     return res.send('All fields are required.');
   }
+
+  // Generate session ID for progress tracking
+  const sessionId = Date.now().toString();
+  progressData = { sessionId, steps: [] };
 
   // Always use ephemeral storage on Render
   const tmpDir = '/tmp/tmp_repo';
@@ -81,11 +83,11 @@ app.post('/obfuscate', async (req, res) => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
 
     sendProgress('✅ Done! Obfuscated files pushed to destination repo.', 'complete');
-    res.send('Obfuscation complete and pushed to destination repo!');
+    res.json({ success: true, sessionId, message: 'Obfuscation complete!' });
   } catch (err) {
     console.error(err);
     sendProgress('❌ Error: ' + err.message, 'error');
-    res.send('Error: ' + err.message);
+    res.json({ success: false, sessionId, message: 'Error: ' + err.message });
   }
 });
 

@@ -279,36 +279,51 @@
       progressContainer.classList.add('active');
       progressSteps.innerHTML = '';
 
-      // Setup SSE for progress updates
-      const eventSource = new EventSource('/progress');
-      
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        addProgressStep(data.message, data.status);
-        
-        if (data.status === 'complete' || data.status === 'error') {
-          eventSource.close();
-          submitBtn.disabled = false;
-          submitBtn.textContent = data.status === 'complete' ? '✅ Done!' : '❌ Error';
-          setTimeout(() => {
-            submitBtn.textContent = 'Obfuscate & Push';
-            if (data.status === 'complete') {
-              progressContainer.classList.remove('active');
-            }
-          }, 3000);
-        }
-      };
-
-      // Submit the form
+      // Submit the form and get session ID
       try {
-        await fetch('/obfuscate', {
+        const response = await fetch('/obfuscate', {
           method: 'POST',
           body: new URLSearchParams(formData)
         });
+        
+        const result = await response.json();
+        const sessionId = result.sessionId;
+        
+        // Poll for progress updates
+        let lastStepCount = 0;
+        const pollInterval = setInterval(async () => {
+          try {
+            const progressRes = await fetch(`/progress/${sessionId}`);
+            const progressData = await progressRes.json();
+            
+            // Only add new steps
+            if (progressData.steps.length > lastStepCount) {
+              for (let i = lastStepCount; i < progressData.steps.length; i++) {
+                const step = progressData.steps[i];
+                addProgressStep(step.message, step.status);
+                
+                if (step.status === 'complete' || step.status === 'error') {
+                  clearInterval(pollInterval);
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = step.status === 'complete' ? '✅ Done!' : '❌ Error';
+                  setTimeout(() => {
+                    submitBtn.textContent = 'Obfuscate & Push';
+                    if (step.status === 'complete') {
+                      progressContainer.classList.remove('active');
+                    }
+                  }, 3000);
+                }
+              }
+              lastStepCount = progressData.steps.length;
+            }
+          } catch (pollErr) {
+            console.error('Polling error:', pollErr);
+          }
+        }, 500); // Poll every 500ms
+        
       } catch (err) {
         console.error(err);
         addProgressStep('Error: ' + err.message, 'error');
-        eventSource.close();
         submitBtn.disabled = false;
         submitBtn.textContent = 'Obfuscate & Push';
       }
