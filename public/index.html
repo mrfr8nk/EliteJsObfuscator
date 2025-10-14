@@ -279,51 +279,64 @@
       progressContainer.classList.add('active');
       progressSteps.innerHTML = '';
 
-      // Submit the form and get session ID
+      // Simulate progress steps for better UX
+      const progressSteps = [
+        { message: '🔄 Initializing obfuscation process...', delay: 200 },
+        { message: '📥 Cloning source repository...', delay: 1500 },
+        { message: '🔐 Analyzing JavaScript files...', delay: 2000 },
+        { message: '⚙️ Applying obfuscation transformations...', delay: 3000 },
+        { message: '📝 Committing obfuscated code...', delay: 1000 },
+        { message: '🚀 Pushing to destination repository...', delay: 1500 }
+      ];
+
+      let currentStep = 0;
+      
+      const showNextStep = () => {
+        if (currentStep < progressSteps.length) {
+          addProgressStep(progressSteps[currentStep].message, 'active');
+          currentStep++;
+        }
+      };
+
+      // Show first step immediately
+      showNextStep();
+
+      // Submit the form
       try {
+        const progressInterval = setInterval(() => {
+          if (currentStep < progressSteps.length) {
+            showNextStep();
+          }
+        }, 2000);
+
         const response = await fetch('/obfuscate', {
           method: 'POST',
           body: new URLSearchParams(formData)
         });
         
         const result = await response.json();
-        const sessionId = result.sessionId;
+        clearInterval(progressInterval);
         
-        // Poll for progress updates
-        let lastStepCount = 0;
-        const pollInterval = setInterval(async () => {
-          try {
-            const progressRes = await fetch(`/progress/${sessionId}`);
-            const progressData = await progressRes.json();
-            
-            // Only add new steps
-            if (progressData.steps.length > lastStepCount) {
-              for (let i = lastStepCount; i < progressData.steps.length; i++) {
-                const step = progressData.steps[i];
-                addProgressStep(step.message, step.status);
-                
-                if (step.status === 'complete' || step.status === 'error') {
-                  clearInterval(pollInterval);
-                  submitBtn.disabled = false;
-                  submitBtn.textContent = step.status === 'complete' ? '✅ Done!' : '❌ Error';
-                  setTimeout(() => {
-                    submitBtn.textContent = 'Obfuscate & Push';
-                    if (step.status === 'complete') {
-                      progressContainer.classList.remove('active');
-                    }
-                  }, 3000);
-                }
-              }
-              lastStepCount = progressData.steps.length;
-            }
-          } catch (pollErr) {
-            console.error('Polling error:', pollErr);
-          }
-        }, 500); // Poll every 500ms
+        if (result.success) {
+          addProgressStep('✅ Done! Obfuscated files pushed to destination repo.', 'complete');
+          submitBtn.textContent = '✅ Done!';
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Obfuscate & Push';
+            progressContainer.classList.remove('active');
+          }, 3000);
+        } else {
+          addProgressStep('❌ Error: ' + result.message, 'error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = '❌ Error';
+          setTimeout(() => {
+            submitBtn.textContent = 'Obfuscate & Push';
+          }, 3000);
+        }
         
       } catch (err) {
         console.error(err);
-        addProgressStep('Error: ' + err.message, 'error');
+        addProgressStep('❌ Error: ' + err.message, 'error');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Obfuscate & Push';
       }
