@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "^/$", "dest": "public/index.html" },
+    { "src": "^/obfuscate$", "dest": "/api/obfuscate" },
+    { "src": "^(?!/api)(.*)$", "dest": "public$1" }
+  ],
+  "functions": {
+    "api/obfuscate.js": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "runtime": "nodejs20.x"
+    }
+  }
+}
