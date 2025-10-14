@@ -315,7 +315,7 @@
       progressSteps.innerHTML = '';
 
       // Simulate progress steps for better UX
-      const progressSteps = [
+      const progressMessages = [
         { message: '🔄 Initializing obfuscation process...', delay: 200 },
         { message: '📥 Cloning source repository...', delay: 1500 },
         { message: '🔐 Analyzing JavaScript files...', delay: 2000 },
@@ -327,8 +327,8 @@
       let currentStep = 0;
       
       const showNextStep = () => {
-        if (currentStep < progressSteps.length) {
-          addProgressStep(progressSteps[currentStep].message, 'active');
+        if (currentStep < progressMessages.length) {
+          addProgressStep(progressMessages[currentStep].message, 'active');
           currentStep++;
         }
       };
@@ -339,7 +339,7 @@
       // Submit the form
       try {
         const progressInterval = setInterval(() => {
-          if (currentStep < progressSteps.length) {
+          if (currentStep < progressMessages.length) {
             showNextStep();
           }
         }, 2000);
