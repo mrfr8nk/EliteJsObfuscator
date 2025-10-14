@@ -3,43 +3,180 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<meta name="color-scheme" content="dark">
 <title>JS Repo Obfuscator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif;}
-body{background:linear-gradient(135deg,#1f1f1f,#2a2a2a);color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;}
-.container{background-color:#161616;padding:30px 40px;border-radius:12px;box-shadow:0 0 20px rgba(0,0,0,0.7);max-width:500px;width:100%;text-align:center;}
-h1{margin-bottom:20px;font-size:1.8rem;color:#00f0ff;text-shadow:1px 1px 4px #0ff;}
-label{display:block;text-align:left;margin-bottom:5px;font-weight:500;color:#ccc;}
-input[type="text"], input[type="password"], input[type="email"]{width:100%;padding:10px 12px;margin-bottom:20px;border-radius:6px;border:1px solid #333;background-color:#1f1f1f;color:#fff;font-size:1rem;}
-input::placeholder{color:#777;}
-button{background-color:#00f0ff;color:#161616;border:none;padding:12px 20px;border-radius:8px;font-size:1rem;cursor:pointer;transition:all 0.3s ease;width:100%;}
-button:hover{background-color:#00c9d9;transform:translateY(-2px);}
-.footer{margin-top:20px;font-size:0.9rem;color:#555;}
-@media(max-width:500px){.container{padding:20px;}h1{font-size:1.5rem;}}
+  :root{
+    --bg-start:#0b1220;        /* deep navy */
+    --bg-end:#251148;          /* dark purple */
+    --primary:#7c3aed;         /* purple */
+    --primary-2:#4f46e5;       /* indigo */
+    --accent:#0ea5e9;          /* sky */
+    --text-primary:rgba(255,255,255,0.96);
+    --text-secondary:rgba(255,255,255,0.72);
+    --surface:rgba(255,255,255,0.07);
+    --surface-2:rgba(255,255,255,0.04);
+    --border:rgba(255,255,255,0.18);
+    --ring:rgba(124,58,237,0.45);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    position:relative;
+    min-height:100vh;
+    display:grid;
+    place-items:center;
+    padding:24px;
+    color:var(--text-primary);
+    background:linear-gradient(135deg,var(--bg-start) 0%,var(--bg-end) 100%);
+    overflow:hidden;
+    font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  }
+
+  /* Decorative gradient orbs */
+  body::before, body::after{
+    content:"";
+    position:absolute;
+    width:60vmax; height:60vmax;
+    border-radius:50%;
+    filter:blur(60px);
+    pointer-events:none;
+    z-index:0;
+  }
+  body::before{left:-20vmax;top:-20vmax;background:radial-gradient(circle at 30% 30%, rgba(56,189,248,0.18), transparent 60%)}
+  body::after{right:-18vmax;bottom:-22vmax;background:radial-gradient(circle at 70% 70%, rgba(139,92,246,0.22), transparent 58%)}
+
+  .container{
+    position:relative;
+    z-index:1;
+    width:min(760px,100%);
+    padding:32px 32px 28px;
+    border-radius:20px;
+    background:linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+    border:1px solid var(--border);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.45),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+
+  .container::before{
+    content:"";
+    position:absolute; inset:0; border-radius:inherit; padding:1px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.06));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    pointer-events:none;
+  }
+
+  h1{
+    font-size:clamp(1.6rem,2vw+1rem,2.4rem);
+    font-weight:800;
+    letter-spacing:-0.02em;
+    margin-bottom:6px;
+    background:linear-gradient(90deg,#a5b4fc 0%,#f0abfc 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .subtitle{color:var(--text-secondary); margin-bottom:20px}
+
+  form{display:block}
+  .form-grid{display:grid; gap:16px}
+  .field{display:flex; flex-direction:column}
+  label{color:var(--text-secondary); font-weight:600; margin-bottom:8px}
+  .hint{color:var(--text-secondary); font-size:0.85rem; margin-top:6px}
+
+  .input{
+    appearance:none;
+    width:100%;
+    padding:14px 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+    color:var(--text-primary);
+    transition:border-color .2s ease, box-shadow .2s ease, transform .12s ease;
+  }
+  .input::placeholder{color:rgba(255,255,255,0.45)}
+  .input:hover{border-color:rgba(255,255,255,0.28)}
+  .input:focus-visible{
+    outline:none;
+    border-color:rgba(124,58,237,0.55);
+    box-shadow:0 0 0 3px rgba(124,58,237,0.25), 0 1px 0 rgba(255,255,255,0.06) inset;
+  }
+
+  .btn-primary{
+    appearance:none; cursor:pointer; user-select:none;
+    width:100%;
+    margin-top:6px;
+    padding:14px 18px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.14);
+    color:#fff;
+    font-weight:700; letter-spacing:.01em;
+    background:linear-gradient(90deg,var(--primary-2),var(--primary),var(--accent));
+    background-size:200% 100%;
+    box-shadow:0 14px 34px rgba(124,58,237,0.45), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition:transform .12s ease, box-shadow .25s ease, background-position .35s ease, filter .2s ease;
+  }
+  .btn-primary:hover{background-position:100% 0; transform:translateY(-1px)}
+  .btn-primary:active{transform:translateY(0); filter:brightness(.98)}
+  .btn-primary:focus-visible{outline:none; box-shadow:0 0 0 4px rgba(14,165,233,0.35), 0 14px 34px rgba(124,58,237,0.55)}
+
+  .footer{margin-top:18px; color:var(--text-secondary); font-size:.95rem; text-align:center}
+
+  @media(max-width:560px){
+    .container{padding:22px 18px; border-radius:16px}
+  }
+
+  @supports not (backdrop-filter: blur(1px)){
+    .container{background:rgba(20,20,40,0.82)}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important}
+  }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>JS Repo Obfuscator</h1>
-<form action="/obfuscate" method="POST">
-<label>Source GitHub Repo URL:</label>
-<input type="text" name="sourceRepo" placeholder="https://github.com/user/source" required>
+  <div class="container" role="region" aria-labelledby="title">
+    <h1 id="title">JS Repo Obfuscator</h1>
+    <p class="subtitle">Securely mirror and obfuscate a GitHub repository.</p>
+    <form action="/obfuscate" method="POST">
+      <div class="form-grid">
+        <div class="field">
+          <label for="sourceRepo">Source GitHub Repo URL</label>
+          <input class="input" id="sourceRepo" name="sourceRepo" type="url" inputmode="url" autocomplete="url" placeholder="https://github.com/user/source" required>
+        </div>
 
-<label>Destination GitHub Repo URL:</label>
-<input type="text" name="destRepo" placeholder="https://github.com/user/dest" required>
+        <div class="field">
+          <label for="destRepo">Destination GitHub Repo URL</label>
+          <input class="input" id="destRepo" name="destRepo" type="url" inputmode="url" autocomplete="url" placeholder="https://github.com/user/dest" required>
+        </div>
 
-<label>GitHub Personal Access Token:</label>
-<input type="password" name="token" placeholder="ghp_xxxxxxx" required>
+        <div class="field">
+          <label for="token">GitHub Personal Access Token</label>
+          <input class="input" id="token" name="token" type="password" placeholder="ghp_xxxxxxx" autocomplete="off" spellcheck="false" required aria-describedby="tokenHelp">
+          <small id="tokenHelp" class="hint">Used only for this request and never logged.</small>
+        </div>
 
-<label>Git Commit Username:</label>
-<input type="text" name="gitUser" placeholder="Your Git username" required>
+        <div class="field">
+          <label for="gitUser">Git Commit Username</label>
+          <input class="input" id="gitUser" name="gitUser" type="text" placeholder="Your Git username" autocomplete="username" required>
+        </div>
 
-<label>Git Commit Email:</label>
-<input type="email" name="gitEmail" placeholder="you@example.com" required>
+        <div class="field">
+          <label for="gitEmail">Git Commit Email</label>
+          <input class="input" id="gitEmail" name="gitEmail" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+        </div>
+      </div>
 
-<button type="submit">Obfuscate & Push</button>
-</form>
-<div class="footer">&copy; 2025 Mr Frank | Powered by JS Obfuscator</div>
-</div>
+      <button type="submit" class="btn-primary">Obfuscate & Push</button>
+    </form>
+    <div class="footer">&copy; 2025 Mr Frank · Powered by JS Obfuscator</div>
+  </div>
 </body>
 </html>
