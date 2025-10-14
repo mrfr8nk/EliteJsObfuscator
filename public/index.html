@@ -270,6 +270,41 @@
     const progressContainer = document.getElementById('progressContainer');
     const progressSteps = document.getElementById('progressSteps');
 
+    // LocalStorage keys
+    const STORAGE_KEY = 'obfuscator_form_data';
+
+    // Load saved data on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        try {
+          const formData = JSON.parse(savedData);
+          document.getElementById('sourceRepo').value = formData.sourceRepo || '';
+          document.getElementById('destRepo').value = formData.destRepo || '';
+          document.getElementById('token').value = formData.token || '';
+          document.getElementById('gitUser').value = formData.gitUser || '';
+          document.getElementById('gitEmail').value = formData.gitEmail || '';
+        } catch (e) {
+          console.error('Error loading saved data:', e);
+        }
+      }
+    });
+
+    // Save form data to localStorage whenever inputs change
+    const inputs = form.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('input', () => {
+        const formData = {
+          sourceRepo: document.getElementById('sourceRepo').value,
+          destRepo: document.getElementById('destRepo').value,
+          token: document.getElementById('token').value,
+          gitUser: document.getElementById('gitUser').value,
+          gitEmail: document.getElementById('gitEmail').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+      });
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
