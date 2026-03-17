@@ -1,126 +1,109 @@
-const fs = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
 const JavaScriptObfuscator = require('javascript-obfuscator');
 
-// Configuration
-const inputDir = './'; // Current directory (your repo root)
-const outputDir = './obfuscated_output'; // Where all files will go
-const excludeFiles = ['settings.js', 'config.js', 'obfuscate-all.js']; // Files to skip
-const excludeDirs = ['node_modules', '.git', 'obfuscated_output']; // Directories to skip
-
-// File extensions to process
-const extensions = ['.js', '.ts', '.jsx', '.tsx', '.mjs', '.cjs'];
-
-// Ensure output directory exists and is empty
-fs.emptyDirSync(outputDir);
-
 /**
- * Process all files recursively
+ * Recursively obfuscates all JS files in a directory.
+ * Skips `settings.js` and `config.js`.
+ * Adds a custom banner at the top of each file.
+ *
+ * @param {string} dir - Directory to obfuscate
+ * @param {object} options - { banner: string }
  */
-async function processDirectory(dir) {
-  const files = await fs.readdir(dir);
-  
-  for (const file of files) {
-    const fullPath = path.join(dir, file);
-    const stat = await fs.stat(fullPath);
-    
-    // Skip excluded directories
-    if (stat.isDirectory()) {
-      if (!excludeDirs.includes(file) && !file.startsWith('.')) {
-        await processDirectory(fullPath);
+function obfuscateDirectory(dir, options = {}) {
+  const results = {
+    total: 0,
+    obfuscated: 0,
+    skipped: 0,
+    failed: 0,
+    files: []
+  };
+
+  function processDirectory(currentDir) {
+    const files = fs.readdirSync(currentDir);
+
+    for (const file of files) {
+      const filePath = path.join(currentDir, file);
+      
+      // Skip if path doesn't exist (safety check)
+      if (!fs.existsSync(filePath)) continue;
+      
+      const stat = fs.statSync(filePath);
+
+      if (stat.isDirectory()) {
+        // Skip node_modules and .git folders
+        if (file !== 'node_modules' && file !== '.git') {
+          processDirectory(filePath);
+        }
+        continue;
+      } 
+      
+      if (file.endsWith('.js')) {
+        results.total++;
+        
+        // Skip settings.js and config.js
+        if (file === 'settings.js' || file === 'config.js') {
+          console.log(`⏭️  Skipping ${filePath}`);
+          results.skipped++;
+          continue;
+        }
+
+        try {
+          console.log(`📝 Processing: ${filePath}`);
+          let code = fs.readFileSync(filePath, 'utf8');
+
+          // Obfuscate the code
+          const obfuscationResult = JavaScriptObfuscator.obfuscate(code, {
+            compact: true,
+            controlFlowFlattening: true,
+            controlFlowFlatteningThreshold: 0.75,
+            deadCodeInjection: true,
+            deadCodeInjectionThreshold: 0.4,
+            stringArray: true,
+            stringArrayEncoding: ['base64'],
+            stringArrayThreshold: 0.75,
+            selfDefending: true,
+            disableConsoleOutput: false,
+            transformObjectKeys: true,
+            identifierNamesGenerator: 'hexadecimal',
+            rotateStringArray: true
+          });
+
+          // Add banner if provided
+          const banner = options.banner || '// Obfuscated by MR FRANK\n';
+          const obfuscatedCode = banner + obfuscationResult.getObfuscatedCode();
+
+          // Write back to the file
+          fs.writeFileSync(filePath, obfuscatedCode, 'utf8');
+          console.log(`✅ Obfuscated: ${filePath}`);
+          results.obfuscated++;
+          results.files.push({ path: filePath, status: 'success' });
+        } catch (err) {
+          console.error(`❌ Failed to obfuscate ${filePath}:`, err.message);
+          results.failed++;
+          results.files.push({ path: filePath, status: 'failed', error: err.message });
+        }
       }
-      continue;
-    }
-    
-    // Check if file should be processed
-    const ext = path.extname(file).toLowerCase();
-    if (!extensions.includes(ext)) continue;
-    if (excludeFiles.includes(file)) {
-      console.log(`Skipping excluded file: ${file}`);
-      continue;
-    }
-    
-    try {
-      // Read file content
-      const code = await fs.readFile(fullPath, 'utf8');
-      
-      // Determine obfuscation intensity based on path
-      const isSensitive = fullPath.includes('data') || 
-                         fullPath.includes('plugins') || 
-                         fullPath.includes('lib') ||
-                         fullPath.includes('core') ||
-                         fullPath.includes('utils');
-      
-      // Obfuscation options
-      const obfuscationOptions = {
-        compact: true,
-        controlFlowFlattening: isSensitive,
-        controlFlowFlatteningThreshold: isSensitive ? 0.75 : 0.5,
-        deadCodeInjection: isSensitive,
-        deadCodeInjectionThreshold: isSensitive ? 0.4 : 0.2,
-        stringArray: true,
-        stringArrayEncoding: ['base64'],
-        stringArrayThreshold: 0.75,
-        selfDefending: isSensitive,
-        disableConsoleOutput: false, // Set to true to disable console logs
-        transformObjectKeys: isSensitive,
-        unicodeEscapeSequence: false,
-        identifierNamesGenerator: 'hexadecimal',
-        renameGlobals: false, // Set to true to rename global variables (may break code)
-        rotateStringArray: true,
-        splitStrings: isSensitive,
-        splitStringsChunkLength: 10
-      };
-      
-      // Obfuscate the code
-      const obfuscated = JavaScriptObfuscator.obfuscate(code, obfuscationOptions).getObfuscatedCode();
-      
-      // Create output filename (include original path structure in filename)
-      const relativePath = path.relative(inputDir, fullPath);
-      const safeFilename = relativePath.replace(/[/\\]/g, '_');
-      const outputFilePath = path.join(outputDir, safeFilename);
-      
-      // Add banner
-      const banner = `// Obfuscated with MR FRANK's tool\n// Original: ${relativePath}\n// Date: ${new Date().toISOString()}\n\n`;
-      const finalCode = banner + obfuscated;
-      
-      // Write to output directory
-      await fs.writeFile(outputFilePath, finalCode, 'utf8');
-      
-      console.log(`✅ Obfuscated: ${relativePath} -> ${safeFilename}`);
-    } catch (err) {
-      console.error(`❌ Failed to obfuscate ${fullPath}:`, err.message);
     }
   }
+
+  // Start processing
+  console.log(`\n🔍 Starting obfuscation in: ${dir}`);
+  processDirectory(dir);
+  
+  // Print summary
+  console.log('\n📊 Obfuscation Summary:');
+  console.log(`   Total files: ${results.total}`);
+  console.log(`   ✅ Obfuscated: ${results.obfuscated}`);
+  console.log(`   ⏭️  Skipped: ${results.skipped}`);
+  console.log(`   ❌ Failed: ${results.failed}`);
+  console.log('');
+  
+  return results;
 }
 
-// Start the process
-(async () => {
-  console.log('🚀 Starting obfuscation of all JS/TS files...');
-  console.log(`📁 Input directory: ${path.resolve(inputDir)}`);
-  console.log(`📁 Output directory: ${path.resolve(outputDir)}`);
-  console.log('---');
-  
-  try {
-    await processDirectory(inputDir);
-    
-    // Create an index file with mapping
-    const mappingFile = path.join(outputDir, '_file_mapping.txt');
-    const files = await fs.readdir(outputDir);
-    const mapping = files
-      .filter(f => !f.startsWith('_'))
-      .map(f => {
-        const original = f.replace(/_/g, '/');
-        return `${f} -> ${original}`;
-      })
-      .join('\n');
-    
-    await fs.writeFile(mappingFile, `File Mapping:\n${mapping}\n`, 'utf8');
-    
-    console.log('---');
-    console.log(`✨ Done! Obfuscated files are in: ${outputDir}`);
-    console.log(`📋 File mapping saved to: ${mappingFile}`);
-  } catch (err) {
-    console.error('❌ Error:', err);
-  }
-})();
+// Make sure we're exporting the function correctly
+module.exports = obfuscateDirectory;
+
+// Also export as default for ES modules compatibility
+module.exports.default = obfuscateDirectory;
